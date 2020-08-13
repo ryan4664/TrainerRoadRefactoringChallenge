@@ -14,7 +14,7 @@ Refactor the code so that it can survive an onslaught of the upcoming changes, y
 
 Be pragmatic in your refactoring. Don't use something fancy if you feel it's not needed.
 
-Do not change the indentation length, spaces vs tabs, or string literal delimiters (`'` vs `''`). This means you should not run Prettier.
+Do not change the indentation length, spaces vs tabs, string literal delimiters (`'` vs `''`), newlines (`LF` vs `CRLF`), or similar. This means you should not run Prettier.
 
 Zip up your project (remove node_modules) and submit it with your resume at this job posting: 
 https://trainerroad.recruiterbox.com/jobs/fk0j1wf. Don't do a PR/Fork as everyone else would see your work and could copy it.
