@@ -1,22 +1,74 @@
 import { Line } from "./line";
 import { Bike } from "./bike";
+import { DiscountCode } from "./discountCode";
 
 const newline = '\n';
+const digitSeperatorRegex = /(\d{3})(?=\d)/g;
 
-function formatMoney(amount: any, decimalCount = 2, decimal = ".", thousands = ",") {
+function formatMoney(amount: number, decimalCount: number = 2, decimal: string = ".", thousandsSeperator: string = ","): string {
     try {
-        decimalCount = Math.abs(decimalCount);
-        decimalCount = isNaN(decimalCount) ? 2 : decimalCount;
-
         const negativeSign = amount < 0 ? "-" : "";
 
-        let i: any = parseInt(amount = Math.abs(Number(amount) || 0).toFixed(decimalCount)).toString();
-        let j = (i.length > 3) ? i.length % 3 : 0;
+        decimalCount = Math.abs(decimalCount);
+        let amountWithDecimals = Math.abs(amount).toFixed(decimalCount);
+        
+        let amountWithoutDecimalss: string = parseInt(amountWithDecimals).toString();
+        
+        let digitSeperatorIndex: number = (amountWithoutDecimalss.length > 3) ? amountWithoutDecimalss.length % 3 : 0;
 
-        return negativeSign + (j ? i.substr(0, j) + thousands : '') + i.substr(j).replace(/(\d{3})(?=\d)/g, "$1" + thousands) + (decimalCount ? decimal + Math.abs(amount - i).toFixed(decimalCount).slice(2) : "");
+        let thousandsWithSeperator = digitSeperatorIndex ? amountWithoutDecimalss.substr(0, digitSeperatorIndex) + thousandsSeperator : '';
+        let hundreds = amountWithoutDecimalss.substr(digitSeperatorIndex).replace(digitSeperatorRegex, "$1" + thousandsSeperator);
+        let cents = (decimalCount && decimal + Math.abs(amount - parseInt(amountWithoutDecimalss)).toFixed(decimalCount).slice(2));
+            
+        return negativeSign + thousandsWithSeperator + hundreds + cents;
     } catch (e) {
         console.log(e);
     }
+}
+
+function calculatePrice(quantity: number, price: number) : number {
+    let amount = 0;
+
+    switch (price) {
+        case Bike.OneThousand:
+            if (quantity >= 20)
+                amount += quantity * price * .9;
+            else
+                amount += quantity * price;
+            break;
+        case Bike.OneThousandFiveHundred:
+            if (quantity >= 15)
+                amount += quantity * price * .9;
+            else
+                amount += quantity * price;
+            break;
+        case Bike.TwoThousand:
+            if (quantity >= 10)
+                amount += quantity * price * .8;
+            else
+                amount += quantity * price;
+            break;
+        case Bike.TwoThousandFiveHundred:
+            if (quantity >= 7)
+                amount += quantity * price * .8;
+            else
+                amount += quantity * price;
+            break;
+        case Bike.FiveThousand:
+            if (quantity >= 5)
+                amount += quantity * price * .8;
+            else
+                amount += quantity * price;
+            break;
+        case Bike.TenThousand:
+            if (quantity > 1)
+                amount += quantity * price * .7;
+            else
+                amount += quantity * price;
+            break;     
+    }
+
+    return amount;
 }
 
 export class Order {
@@ -43,27 +95,19 @@ export class Order {
         for (var i = 0; i < this._lines.length; i++) {
             var thisAmount = 0;
 
-            switch (this._lines[i].bike.price) {
-                case Bike.OneThousand:
-                    if (this._lines[i].quantity >= 20)
-                        thisAmount += this._lines[i].quantity * this._lines[i].bike.price * .9;
-                    else
-                        thisAmount += this._lines[i].quantity * this._lines[i].bike.price;
-                    break;
-                case Bike.TwoThousand:
-                    if (this._lines[i].quantity >= 10)
-                        thisAmount += this._lines[i].quantity * this._lines[i].bike.price * .8;
-                    else
-                        thisAmount += this._lines[i].quantity * this._lines[i].bike.price;
-                    break;
-                case Bike.FiveThousand:
-                    if (this._lines[i].quantity >= 5)
-                        thisAmount += this._lines[i].quantity * this._lines[i].bike.price * .8;
-                    else
-                        thisAmount += this._lines[i].quantity * this._lines[i].bike.price;
-                    break;
+            thisAmount = calculatePrice(this._lines[i].quantity, this._lines[i].bike.price);
+
+            result += `\t${this._lines[i].quantity} x ${this._lines[i].bike.brand} ${this._lines[i].bike.model}`;
+
+            if (this._lines[i].discountCode) {
+                var validDiscountCode = DiscountCode.AvailableDiscountCodes.filter(x => x === this._lines[i].discountCode.name);
+                if (validDiscountCode.length === 1) {
+                    thisAmount = thisAmount - (thisAmount * (this._lines[i].discountCode.discountPercentage / 100));
+                    result += ` - ${this._lines[i].discountCode.discountPercentage}% (${this._lines[i].discountCode.name})`;
+                }
             }
-            result += '\t' + this._lines[i].quantity + ' x ' + this._lines[i].bike.brand + ' ' + this._lines[i].bike.model + ' = $' + formatMoney(thisAmount) + newline;
+
+            result += ' = $' + formatMoney(thisAmount) + newline;
             totalAmout += thisAmount;
         }
 
@@ -83,27 +127,19 @@ export class Order {
         for (var i = 0; i < this._lines.length; i++) {
             var thisAmount = 0;
 
-            switch (this._lines[i].bike.price) {
-                case Bike.OneThousand:
-                    if (this._lines[i].quantity >= 20)
-                        thisAmount += this._lines[i].quantity * this._lines[i].bike.price * .9;
-                    else
-                        thisAmount += this._lines[i].quantity * this._lines[i].bike.price;
-                    break;
-                case Bike.TwoThousand:
-                    if (this._lines[i].quantity >= 10)
-                        thisAmount += this._lines[i].quantity * this._lines[i].bike.price * .8;
-                    else
-                        thisAmount += this._lines[i].quantity * this._lines[i].bike.price;
-                    break;
-                case Bike.FiveThousand:
-                    if (this._lines[i].quantity >= 5)
-                        thisAmount += this._lines[i].quantity * this._lines[i].bike.price * .8;
-                    else
-                        thisAmount += this._lines[i].quantity * this._lines[i].bike.price;
-                    break;
+            thisAmount = calculatePrice(this._lines[i].quantity, this._lines[i].bike.price);
+
+            result += `<li>${this._lines[i].quantity} x ${this._lines[i].bike.brand} ${this._lines[i].bike.model}`;
+           
+            if (this._lines[i].discountCode) {
+                var validDiscountCode = DiscountCode.AvailableDiscountCodes.filter(x => x === this._lines[i].discountCode.name);
+                if (validDiscountCode.length === 1) {
+                    thisAmount = thisAmount - (thisAmount * (this._lines[i].discountCode.discountPercentage / 100));
+                    result += ` - ${this._lines[i].discountCode.discountPercentage}% (${this._lines[i].discountCode.name})`;
+                }
             }
-            result += '<li>' + this._lines[i].quantity + ' x ' + this._lines[i].bike.brand + ' ' + this._lines[i].bike.model + ' = $' + formatMoney(thisAmount) + '</li>';
+            
+            result += ` = $${formatMoney(thisAmount)}</li>`;
             totalAmout += thisAmount;
         };
         result += '</ul>';
